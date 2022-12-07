@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
 import 'dart:convert';
 
-var icon = "01d";
+var icon = "02d";
 var meteolocale = "Clear";
 List ville = [];
 
