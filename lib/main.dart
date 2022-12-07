@@ -116,7 +116,7 @@ class PageDeBase extends StatefulWidget {
 //   var cherch = "Nice";
 //   print("Meteo bar");
 //   var url =
-//       "https://api.openweathermap.org/data/2.5/weather?q=$cherch&appid=89ee0c135f537894a7668775dd84ab25";
+//       "https://api.openweathermap.org/data/2.5/weather?q=$cherch&appid=$OPEN_WEATHER_MAP_APPID";
 //   final response = await http.get(Uri.parse(url));
 //   getNowMeteo MeteoNow = getNowMeteo.fromJson(jsonDecode(response.body));
 //   meteolocale = MeteoNow.weather!.first.main.toString();
@@ -130,7 +130,7 @@ void MeteoWithLocation(BuildContext context) async {
   var lon = geoloc.longitude;
   print("Meteo Location");
   var url =
-      "https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=89ee0c135f537894a7668775dd84ab25";
+      "https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$OPEN_WEATHER_MAP_APPID";
   final response = await http.get(Uri.parse(url));
   getNowMeteo MeteoNow = getNowMeteo.fromJson(jsonDecode(response.body));
   meteolocale = MeteoNow.weather!.first.main.toString();
