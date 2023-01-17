@@ -16,8 +16,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
-
-  // This widget is the root of your application.
+ 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,24 +29,74 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MeteoOnTime {
-  String? weatherDescription;
-  String? weatherIcon;
+class getNowMeteo {
+  Coord? coord;
+  List<Weather>? weather;
 
-  MeteoOnTime({
-    this.weatherDescription,
-    this.weatherIcon,
-  });
+  getNowMeteo({this.coord, this.weather});
 
-  MeteoOnTime.fromJson(Map<String, dynamic> json) {
-    weatherDescription = json['weather'][0]['description'];
-    weatherIcon = json['weather'][0]['icon'];
+  getNowMeteo.fromJson(Map<String, dynamic> json) {
+    coord = json['coord'] != null ? new Coord.fromJson(json['coord']) : null;
+    if (json['weather'] != null) {
+      weather = <Weather>[];
+      json['weather'].forEach((v) {
+        weather!.add(new Weather.fromJson(v));
+      });
+    }
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['weatherDescription'] = this.weatherDescription;
-    data['weatherIcon'] = this.weatherIcon;
+    if (this.coord != null) {
+      data['coord'] = this.coord!.toJson();
+    }
+    if (this.weather != null) {
+      data['weather'] = this.weather!.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
+}
+
+class Coord {
+  double? lon;
+  double? lat;
+
+  Coord({this.lon, this.lat});
+
+  Coord.fromJson(Map<String, dynamic> json) {
+    lon = json['lon'];
+    lat = json['lat'].toDouble();
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['lon'] = this.lon;
+    data['lat'] = this.lat;
+    return data;
+  }
+}
+
+class Weather {
+  int? id;
+  String? main;
+  String? description;
+  String? icon;
+
+  Weather({this.id, this.main, this.description, this.icon});
+
+  Weather.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    main = json['main'];
+    description = json['description'];
+    icon = json['icon'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['main'] = this.main;
+    data['description'] = this.description;
+    data['icon'] = this.icon;
     return data;
   }
 }
@@ -82,15 +131,9 @@ void MeteoWithLocation(BuildContext context) async {
   var url =
       "api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$OPEN_WEATHER_MAP_APPID";
   final response = await http.get(Uri.parse(url));
-  MeteoOnTime MeteoNow = MeteoOnTime.fromJson(jsonDecode(response.body));
-  List<MeteoOnTime> meteoList = [];
-
-  for (var i = 0; i < json.get('list').length; i++) {
-    MeteoOnTime meteo = MeteoOnTime(
-        weatherDescription: json.get('list')[i]['weather'][0]['description'],
-        weatherIcon: json.get('list')[i]['weather'][0]['icon']);
-    meteoList.add(meteo);
-  }
+  getNowMeteo MeteoNow = getNowMeteo.fromJson(jsonDecode(response.body));
+  meteolocale = MeteoNow.weather!.first.main.toString();
+  icon = "${MeteoNow.weather!.first.icon}";
 }
 
 class _createState extends State<PageDeBase> {
