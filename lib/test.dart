@@ -1,10 +1,10 @@
-class meteoontime {
+class MeteoOnTime{
   int? cnt;
   List<List>? list;
 
-  meteoontime({this.cnt, this.list});
+  MeteoOnTime({this.cnt, this.list});
 
-  meteoontime.fromJson(Map<String, dynamic> json) {
+  MeteoOnTime.fromJson(Map<String, dynamic> json) {
     cnt = json['cnt'];
     if (json['list'] != null) {
       list = <List>[];
@@ -79,5 +79,5 @@ class Weather {
 
 // https://openweathermap.org/forecast5
 // api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$OPEN_WEATHER_MAP_APPID
-//  meteolocale = meteoontime.list!.first.weather!.first.main.toString();
-//  icon = ${meteoontime.list!.first.weather!.first.icon};
+//  meteolocale = MeteoOnTime.list!.first.weather!.first.main.toString();
+//  icon = ${MeteoOnTime.list!.first.weather!.first.icon};

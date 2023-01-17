@@ -16,8 +16,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
-
-  // This widget is the root of your application.
+ 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,14 +29,41 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class getNowMeteo {
-  Coord? coord;
+class MeteoOnTime{
+  int? cnt;
+  List<List>? list;
+
+  MeteoOnTime({this.cnt, this.list});
+
+  MeteoOnTime.fromJson(Map<String, dynamic> json) {
+    cnt = json['cnt'];
+    if (json['list'] != null) {
+      list = <List>[];
+      json['list'].forEach((v) {
+        list!.add(new List.fromJson(v));
+      });
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    if (this.list != null) {
+      data['list'] = this.list!.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
+}
+
+class List {
+  int? dt;
   List<Weather>? weather;
 
-  getNowMeteo({this.coord, this.weather});
+  List(
+      {this.dt,
+      this.weather,});
 
-  getNowMeteo.fromJson(Map<String, dynamic> json) {
-    coord = json['coord'] != null ? new Coord.fromJson(json['coord']) : null;
+  List.fromJson(Map<String, dynamic> json) {
+    dt = json['dt'];
     if (json['weather'] != null) {
       weather = <Weather>[];
       json['weather'].forEach((v) {
@@ -48,31 +74,10 @@ class getNowMeteo {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.coord != null) {
-      data['coord'] = this.coord!.toJson();
-    }
+    data['dt'] = this.dt;
     if (this.weather != null) {
       data['weather'] = this.weather!.map((v) => v.toJson()).toList();
     }
-    return data;
-  }
-}
-
-class Coord {
-  double? lon;
-  double? lat;
-
-  Coord({this.lon, this.lat});
-
-  Coord.fromJson(Map<String, dynamic> json) {
-    lon = json['lon'];
-    lat = json['lat'].toDouble();
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['lon'] = this.lon;
-    data['lat'] = this.lat;
     return data;
   }
 }
@@ -130,11 +135,11 @@ void MeteoWithLocation(BuildContext context) async {
   var lon = geoloc.longitude;
   print("Meteo Location");
   var url =
-      "https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$OPEN_WEATHER_MAP_APPID";
+      "api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$OPEN_WEATHER_MAP_APPID";
   final response = await http.get(Uri.parse(url));
-  getNowMeteo MeteoNow = getNowMeteo.fromJson(jsonDecode(response.body));
-  meteolocale = MeteoNow.weather!.first.main.toString();
-  icon = "${MeteoNow.weather!.first.icon}";
+  MeteoOnTime MeteoNow = MeteoOnTime.fromJson(jsonDecode(response.body));
+  meteolocale = MeteoOnTime.list!.first.weather!.first.main.toString(); 
+  icon = ${MeteoOnTime.list!.first.weather!.first.icon};
 }
 
 class _createState extends State<PageDeBase> {
