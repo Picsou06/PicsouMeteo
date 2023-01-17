@@ -80,4 +80,4 @@ class Weather {
 // https://openweathermap.org/forecast5
 // api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$OPEN_WEATHER_MAP_APPID
 //  meteolocale = meteoontime.list!.first.weather!.first.main.toString();
-//  icon = "${meteoontime.list!.first.weather!.first.}";
+//  icon = ${meteoontime.list!.first.weather!.first.icon};
