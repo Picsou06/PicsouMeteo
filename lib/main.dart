@@ -5,10 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart'
+    as smooth_page_indicator;
+import 'package:simple_gradient_text/simple_gradient_text.dart';
 
-var icon = "02d";
+var icon = "09d";
 var meteolocale = "Clear";
-List ville = [];
 var OPEN_WEATHER_MAP_APPID = "89ee0c135f537894a7668775dd84ab25";
 
 void main() {
@@ -59,9 +62,10 @@ class WeatherList {
   int? dt;
   List<Weather>? weather;
 
+  getNowMeteo({this.coord, this.weather});
   WeatherList({this.dt, this.weather});
 
-  WeatherList.fromJson(Map<String, dynamic> json) {
+  List.fromJson(Map<String, dynamic> json) {
     dt = json['dt'];
     if (json['weather'] != null) {
       weather = <Weather>[];
@@ -73,10 +77,31 @@ class WeatherList {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['dt'] = this.dt;
+    if (this.coord != null) {
+      data['coord'] = this.coord!.toJson();
+    }
     if (this.weather != null) {
       data['weather'] = this.weather!.map((v) => v.toJson()).toList();
     }
+    return data;
+  }
+}
+
+class Coord {
+  double? lon;
+  double? lat;
+
+  Coord({this.lon, this.lat});
+
+  Coord.fromJson(Map<String, dynamic> json) {
+    lon = json['lon'];
+    lat = json['lat'].toDouble();
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['lon'] = this.lon;
+    data['lat'] = this.lat;
     return data;
   }
 }
@@ -116,29 +141,254 @@ class PageDeBase extends StatefulWidget {
 class PageDeBaseState extends State<PageDeBase> {
   @override
   Widget build(BuildContext context) {
-    sleep(Duration(seconds: 2));
-    var icontxt = "$icon@2x.png";
-    print(icontxt);
-    print(meteolocale);
-    return Container(
-        height: 700,
-        color: Colors.blue,
-        child: Column(children: [
-          SizedBox(
-              height: 50,
-              width: 50,
-              child: ElevatedButton(
+    return Scaffold(
+      key: scaffoldKey,
+      backgroundColor: Color(0xFF00B5FF),
+      appBar: AppBar(
+        backgroundColor: Color(0xCD4B39EF),
+        automaticallyImplyLeading: false,
+        leading: Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(4, 0, 3, 0),
+          child: FlutterFlowIconButton(
+            borderRadius: 30,
+            borderWidth: 1,
+            buttonSize: 55,
+            fillColor: Colors.white,
+            icon: Icon(
+              Icons.replay_rounded,
+              color: Color(0xCD4B39EF),
+              size: 30,
+            ),
+            onPressed: () {
+              print('IconButton pressed ...');
+            },
+          ),
+        ),
+        title: Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 5),
+          child: Text(
+            'PicsouMétéo',
+            style: FlutterFlowTheme.of(context).title2.override(
+                  fontFamily: 'Noto Serif',
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
+        actions: [
+          Align(
+            alignment: AlignmentDirectional(0, 0),
+            child: Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(4, 0, 3, 0),
+              child: FlutterFlowIconButton(
+                borderRadius: 30,
+                borderWidth: 1,
+                buttonSize: 55,
+                fillColor: FlutterFlowTheme.of(context).primaryBtnText,
+                icon: Icon(
+                  Icons.search,
+                  color: Color(0xCD4B39EF),
+                  size: 27,
+                ),
                 onPressed: () {
-                  MeteoWithLocation(context);
+                  print('IconButton pressed ...');
                 },
-                child: null,
-              )),
-          SizedBox(
-            height: 50,
-            width: 50,
-            child: Image.network("http://openweathermap.org/img/wn/$icontxt"),
-          )
-        ]));
+              ),
+            ),
+          ),
+        ],
+        centerTitle: true,
+        elevation: 2,
+      ),
+      body: SafeArea(
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).requestFocus(_unfocusNode),
+          child: Stack(
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(0, 70, 0, 0),
+                    child: GradientText(
+                      'Votre ville',
+                      textAlign: TextAlign.center,
+                      style: FlutterFlowTheme.of(context).title3.override(
+                            fontFamily: 'Poppins',
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      colors: [Color(0xFF343434), Color(0xCD4B39EF)],
+                      gradientDirection: GradientDirection.ltr,
+                      gradientType: GradientType.linear,
+                    ),
+                  ),
+                ],
+              ),
+              Align(
+                alignment: AlignmentDirectional(0, 0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        height: 500,
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding:
+                                  EdgeInsetsDirectional.fromSTEB(0, 0, 0, 50),
+                              child: PageView(
+                                controller: pageViewController ??=
+                                    PageController(initialPage: 0),
+                                scrollDirection: Axis.horizontal,
+                                children: [
+                                  Column(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Image.network(
+                                        'http://openweathermap.org/img/wn/02d@2x.png',
+                                        width: 250,
+                                        height: 250,
+                                        fit: BoxFit.contain,
+                                      ),
+                                      Text(
+                                        valueOrDefault<String>(
+                                          dateTimeFormat(
+                                              'EEEE', getCurrentTimestamp),
+                                          'Demain',
+                                        ),
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyText1
+                                            .override(
+                                              fontFamily: 'Poppins',
+                                              color: Color(0xCD4B39EF),
+                                              fontSize: 24,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Image.network(
+                                        'http://openweathermap.org/img/wn/02d@2x.png',
+                                        width: 250,
+                                        height: 250,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      Text(
+                                        valueOrDefault<String>(
+                                          dateTimeFormat(
+                                              'EEEE', getCurrentTimestamp),
+                                          'Demain',
+                                        ),
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyText1
+                                            .override(
+                                              fontFamily: 'Poppins',
+                                              color: Color(0xCD4B39EF),
+                                              fontSize: 24,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Image.network(
+                                        'http://openweathermap.org/img/wn/10d@2x.png',
+                                        width: 250,
+                                        height: 250,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      Text(
+                                        dateTimeFormat(
+                                            'EEEE', getCurrentTimestamp),
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyText1
+                                            .override(
+                                              fontFamily: 'Poppins',
+                                              color: Color(0xCD4B39EF),
+                                              fontSize: 24,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Image.network(
+                                        'http://openweathermap.org/img/wn/10d@2x.png',
+                                        width: 250,
+                                        height: 250,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      Text(
+                                        dateTimeFormat(
+                                            'EEEE', getCurrentTimestamp),
+                                        style: FlutterFlowTheme.of(context)
+                                            .bodyText1
+                                            .override(
+                                              fontFamily: 'Poppins',
+                                              color: Color(0xCD4B39EF),
+                                              fontSize: 24,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Align(
+                              alignment: AlignmentDirectional(0, 1),
+                              child: Padding(
+                                padding:
+                                    EdgeInsetsDirectional.fromSTEB(0, 0, 0, 10),
+                                child:
+                                    smooth_page_indicator.SmoothPageIndicator(
+                                  controller: pageViewController ??=
+                                      PageController(initialPage: 0),
+                                  count: 4,
+                                  axisDirection: Axis.horizontal,
+                                  onDotClicked: (i) {
+                                    pageViewController!.animateToPage(
+                                      i,
+                                      duration: Duration(milliseconds: 500),
+                                      curve: Curves.ease,
+                                    );
+                                  },
+                                  effect:
+                                      smooth_page_indicator.ExpandingDotsEffect(
+                                    expansionFactor: 2,
+                                    spacing: 8,
+                                    radius: 16,
+                                    dotWidth: 16,
+                                    dotHeight: 16,
+                                    dotColor: Color(0xFF9E9E9E),
+                                    activeDotColor: Color(0xFF3F51B5),
+                                    paintStyle: PaintingStyle.fill,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
