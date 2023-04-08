@@ -9,6 +9,7 @@ import 'dart:convert';
 var icon = "02d";
 var meteolocale = "Clear";
 List ville = [];
+var OPEN_WEATHER_MAP_APPID = "89ee0c135f537894a7668775dd84ab25";
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +17,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
- 
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -29,40 +30,38 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MeteoOnTime{
+class MeteoOnTime {
   int? cnt;
-  List<List>? list;
+  List<WeatherList>? weatherList;
 
-  MeteoOnTime({this.cnt, this.list});
+  MeteoOnTime({this.cnt, this.weatherList});
 
   MeteoOnTime.fromJson(Map<String, dynamic> json) {
     cnt = json['cnt'];
     if (json['list'] != null) {
-      list = <List>[];
+      weatherList = <WeatherList>[];
       json['list'].forEach((v) {
-        list!.add(new List.fromJson(v));
+        weatherList!.add(new WeatherList.fromJson(v));
       });
     }
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.list != null) {
-      data['list'] = this.list!.map((v) => v.toJson()).toList();
+    if (this.weatherList != null) {
+      data['list'] = this.weatherList!.map((v) => v.toJson()).toList();
     }
     return data;
   }
 }
 
-class List {
+class WeatherList {
   int? dt;
   List<Weather>? weather;
 
-  List(
-      {this.dt,
-      this.weather,});
+  WeatherList({this.dt, this.weather});
 
-  List.fromJson(Map<String, dynamic> json) {
+  WeatherList.fromJson(Map<String, dynamic> json) {
     dt = json['dt'];
     if (json['weather'] != null) {
       weather = <Weather>[];
@@ -111,38 +110,10 @@ class PageDeBase extends StatefulWidget {
   const PageDeBase({Key? key}) : super(key: key);
 
   @override
-  State<PageDeBase> createState() => _createState();
+  State<PageDeBase> createState() => PageDeBaseState();
 }
 
-// void MeteoWithbar(BuildContext context) async {
-//   var responses = await rootBundle.loadString('assets/city.list.json');
-//   Map<String, dynamic> map = json.decode(responses);
-//   List<dynamic> ville = map["name"];
-//   var cherch = "Nice";
-//   print("Meteo bar");
-//   var url =
-//       "https://api.openweathermap.org/data/2.5/weather?q=$cherch&appid=$OPEN_WEATHER_MAP_APPID";
-//   final response = await http.get(Uri.parse(url));
-//   getNowMeteo MeteoNow = getNowMeteo.fromJson(jsonDecode(response.body));
-//   meteolocale = MeteoNow.weather!.first.main.toString();
-//   icon = "${MeteoNow.weather!.first.icon}";
-// }
-
-void MeteoWithLocation(BuildContext context) async {
-  Location location = Location();
-  var geoloc = await location.getLocation();
-  var lat = geoloc.latitude;
-  var lon = geoloc.longitude;
-  print("Meteo Location");
-  var url =
-      "api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$OPEN_WEATHER_MAP_APPID";
-  final response = await http.get(Uri.parse(url));
-  MeteoOnTime MeteoNow = MeteoOnTime.fromJson(jsonDecode(response.body));
-  meteolocale = MeteoOnTime.list!.first.weather!.first.main.toString(); 
-  icon = ${MeteoOnTime.list!.first.weather!.first.icon};
-}
-
-class _createState extends State<PageDeBase> {
+class PageDeBaseState extends State<PageDeBase> {
   @override
   Widget build(BuildContext context) {
     sleep(Duration(seconds: 2));
@@ -169,4 +140,34 @@ class _createState extends State<PageDeBase> {
           )
         ]));
   }
+}
+
+// void MeteoWithbar(BuildContext context) async {
+//   var responses = await rootBundle.loadString('assets/city.list.json');
+//   Map<String, dynamic> map = json.decode(responses);
+//   List<dynamic> ville = map["name"];
+//   var cherch = "Nice";
+//   print("Meteo bar");
+//   var url =
+//       "https://api.openweathermap.org/data/2.5/weather?q=$cherch&appid=$OPEN_WEATHER_MAP_APPID";
+//   final response = await http.get(Uri.parse(url));
+//   getNowMeteo MeteoNow = getNowMeteo.fromJson(jsonDecode(response.body));
+//   meteolocale = MeteoNow.weather!.first.main.toString();
+//   icon = "${MeteoNow.weather!.first.icon}";
+// }
+void MeteoWithLocation(BuildContext context) async {
+  Location location = Location();
+  var geoloc = await location.getLocation();
+  var lat = geoloc.latitude;
+  var lon = geoloc.longitude;
+  print("Meteo Location");
+  var url =
+      "http://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$OPEN_WEATHER_MAP_APPID";
+  final response = await http.get(Uri.parse(url));
+  MeteoOnTime MeteoNow = MeteoOnTime.fromJson(jsonDecode(response.body));
+  setState(() {
+    meteolocale = MeteoNow.weatherList!.first.weather!.first.main.toString();
+    print("Icon: ${MeteoNow.weatherList!.first.weather?.first.icon}");
+    icon = "${MeteoNow.weatherList!.first.weather?.first.icon}";
+  });
 }
