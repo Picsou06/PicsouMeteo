@@ -1,6 +1,3 @@
-// ignore_for_file: prefer_const_constructors, non_constant_identifier_names, avoid_print, unused_local_variable, camel_case_types, unnecessary_new, unnecessary_this, prefer_collection_literals, prefer_const_literals_to_create_immutables
-
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart';
@@ -8,7 +5,7 @@ import 'dart:convert';
 
 var icon = "02d";
 var meteolocale = "Clear";
-List ville = [];
+List<String> villes = [];
 var OPEN_WEATHER_MAP_APPID = "89ee0c135f537894a7668775dd84ab25";
 
 void main() {
@@ -25,84 +22,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: PageDeBase(),
+      home: const PageDeBase(),
     );
-  }
-}
-
-class MeteoOnTime {
-  int? cnt;
-  List<WeatherList>? weatherList;
-
-  MeteoOnTime({this.cnt, this.weatherList});
-
-  MeteoOnTime.fromJson(Map<String, dynamic> json) {
-    cnt = json['cnt'];
-    if (json['list'] != null) {
-      weatherList = <WeatherList>[];
-      json['list'].forEach((v) {
-        weatherList!.add(new WeatherList.fromJson(v));
-      });
-    }
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.weatherList != null) {
-      data['list'] = this.weatherList!.map((v) => v.toJson()).toList();
-    }
-    return data;
-  }
-}
-
-class WeatherList {
-  int? dt;
-  List<Weather>? weather;
-
-  WeatherList({this.dt, this.weather});
-
-  WeatherList.fromJson(Map<String, dynamic> json) {
-    dt = json['dt'];
-    if (json['weather'] != null) {
-      weather = <Weather>[];
-      json['weather'].forEach((v) {
-        weather!.add(new Weather.fromJson(v));
-      });
-    }
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['dt'] = this.dt;
-    if (this.weather != null) {
-      data['weather'] = this.weather!.map((v) => v.toJson()).toList();
-    }
-    return data;
-  }
-}
-
-class Weather {
-  int? id;
-  String? main;
-  String? description;
-  String? icon;
-
-  Weather({this.id, this.main, this.description, this.icon});
-
-  Weather.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    main = json['main'];
-    description = json['description'];
-    icon = json['icon'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['main'] = this.main;
-    data['description'] = this.description;
-    data['icon'] = this.icon;
-    return data;
   }
 }
 
@@ -110,63 +31,195 @@ class PageDeBase extends StatefulWidget {
   const PageDeBase({Key? key}) : super(key: key);
 
   @override
-  State<PageDeBase> createState() => _createState();
+  State<PageDeBase> createState() => _PageDeBaseState();
 }
 
-// void MeteoWithbar(BuildContext context) async {
-//   var responses = await rootBundle.loadString('assets/city.list.json');
-//   Map<String, dynamic> map = json.decode(responses);
-//   List<dynamic> ville = map["name"];
-//   var cherch = "Nice";
-//   print("Meteo bar");
-//   var url =
-//       "https://api.openweathermap.org/data/2.5/weather?q=$cherch&appid=$OPEN_WEATHER_MAP_APPID";
-//   final response = await http.get(Uri.parse(url));
-//   getNowMeteo MeteoNow = getNowMeteo.fromJson(jsonDecode(response.body));
-//   meteolocale = MeteoNow.weather!.first.main.toString();
-//   icon = "${MeteoNow.weather!.first.icon}";
-// }
+class _PageDeBaseState extends State<PageDeBase> {
+  String selectedCity = '';
 
-void MeteoWithLocation(BuildContext context) async {
-  Location location = Location();
-  var geoloc = await location.getLocation();
-  var lat = geoloc.latitude;
-  var lon = geoloc.longitude;
-  print("Meteo Location");
-  var url =
-      "http://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$OPEN_WEATHER_MAP_APPID";
-  final response = await http.get(Uri.parse(url));
-  MeteoOnTime MeteoNow = MeteoOnTime.fromJson(jsonDecode(response.body));
-  meteolocale = MeteoNow.weatherList!.first.weather!.first.main.toString();
-  print("Icon: ${MeteoNow.weatherList!.first.weather?.first.icon}");
-  icon = "${MeteoNow.weatherList!.first.weather?.first.icon}";
-}
+  @override
+  void initState() {
+    super.initState();
+    chargerVilles();
+    MeteoWithLocation();
+  }
 
-class _createState extends State<PageDeBase> {
+  void chargerVilles() async {
+    final citiesData = await DefaultAssetBundle.of(context)
+        .loadString('assets/city.list.json');
+    final citiesList = json.decode(citiesData) as List<dynamic>;
+    setState(() {
+      villes = citiesList
+          .where((city) => city['country'] == 'FR')
+          .map((city) => city['name'].toString())
+          .toList();
+    });
+  }
+
+  void MeteoWithLocation() async {
+    Location location = Location();
+    var geoloc = await location.getLocation();
+    var lat = geoloc.latitude;
+    var lon = geoloc.longitude;
+    var url =
+        "http://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$OPEN_WEATHER_MAP_APPID";
+    final response = await http.get(Uri.parse(url));
+    MeteoOnTime MeteoNow = MeteoOnTime.fromJson(jsonDecode(response.body));
+    setState(() {
+      meteolocale = MeteoNow.weatherList!.first.weather!.first.main.toString();
+      icon = "${MeteoNow.weatherList!.first.weather?.first.icon}";
+    });
+  }
+
+  void MeteoWithCity(String city) async {
+    var url =
+        "http://api.openweathermap.org/data/2.5/weather?q=$city&appid=$OPEN_WEATHER_MAP_APPID";
+    final response = await http.get(Uri.parse(url));
+    var data = jsonDecode(response.body);
+    setState(() {
+      selectedCity = city;
+      meteolocale = data['weather'][0]['main'];
+      icon = data['weather'][0]['icon'];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    sleep(Duration(seconds: 2));
     var icontxt = "$icon@2x.png";
-    print(icontxt);
-    print(meteolocale);
-    return Container(
-        height: 700,
-        color: Colors.blue,
-        child: Column(children: [
-          SizedBox(
-              height: 50,
-              width: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  MeteoWithLocation(context);
-                },
-                child: null,
-              )),
-          SizedBox(
-            height: 50,
-            width: 50,
-            child: Image.network("http://openweathermap.org/img/wn/$icontxt"),
-          )
-        ]));
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Picsou Météo'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(context: context, delegate: CitySearchDelegate());
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          color: Colors.blue,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Ville sélectionnée : $selectedCity',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Météo : $meteolocale',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Image.network(
+              'http://openweathermap.org/img/w/$icontxt',
+              width: 100,
+              height: 100,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MeteoOnTime {
+  List<Meteo> weatherList;
+
+  MeteoOnTime({required this.weatherList});
+
+  factory MeteoOnTime.fromJson(Map<String, dynamic> json) {
+    var list = json['list'] as List;
+    List<Meteo> weatherList =
+        list.map((weather) => Meteo.fromJson(weather)).toList();
+    return MeteoOnTime(weatherList: weatherList);
+  }
+}
+
+class Meteo {
+  List<Weather>? weather;
+
+  Meteo({this.weather});
+
+  factory Meteo.fromJson(Map<String, dynamic> json) {
+    var list = json['weather'] as List;
+    List<Weather> weatherList =
+        list.map((weather) => Weather.fromJson(weather)).toList();
+    return Meteo(weather: weatherList);
+  }
+}
+
+class Weather {
+  String? main;
+  String? description;
+  String? icon;
+
+  Weather({this.main, this.description, this.icon});
+
+  factory Weather.fromJson(Map<String, dynamic> json) {
+    return Weather(
+      main: json['main'],
+      description: json['description'],
+      icon: json['icon'],
+    );
+  }
+}
+
+class CitySearchDelegate extends SearchDelegate<String> {
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      )
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, '');
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return Container();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final suggestionList = villes
+        .where((city) => city.toLowerCase().startsWith(query.toLowerCase()))
+        .toList();
+    return ListView.builder(
+      itemCount: suggestionList.length,
+      itemBuilder: (context, index) => ListTile(
+        onTap: () {
+          MeteoWithCity(suggestionList[index]);
+          close(context, suggestionList[index]);
+        },
+        title: Text(suggestionList[index]),
+      ),
+    );
   }
 }

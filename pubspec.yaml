@@ -7,6 +7,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_typeahead: ^3.2.0
   auto_size_text: 3.0.0
   cached_network_image: ^3.2.3
   flutter_animate: ^3.1.0
@@ -36,10 +37,4 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
-    - assets/videos/
-    - assets/audios/
-    - assets/lottie_animations/
-    - assets/rive_animations/
-    - assets/pdfs/
-  
+    - assets/
